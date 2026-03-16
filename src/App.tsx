@@ -8,6 +8,9 @@ import Dashboard from "./pages/Dashboard";
 import AgentsPage from "./pages/AgentsPage";
 import ServicesPage from "./pages/ServicesPage";
 import TasksPage from "./pages/TasksPage";
+import MonitoringPage from "./pages/MonitoringPage";
+import TerminalPage from "./pages/TerminalPage";
+import SettingsPage from "./pages/SettingsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +27,9 @@ const App = () => (
             <Route path="/agents" element={<AgentsPage />} />
             <Route path="/services" element={<ServicesPage />} />
             <Route path="/tasks" element={<TasksPage />} />
+            <Route path="/monitoring" element={<MonitoringPage />} />
+            <Route path="/terminal" element={<TerminalPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
