@@ -4,7 +4,15 @@ import { cn } from "@/lib/utils";
 import type { Agent } from "@/lib/mock-data";
 import { StatusDot } from "./StatusDot";
 import { ExpandableOverlay } from "./ExpandableOverlay";
-import { CheckCircle, Clock, AlertTriangle, Activity, ChevronRight, RotateCw, ArrowLeftRight, MessageCircle, BarChart3 } from "lucide-react";
+import { CheckCircle, Clock, AlertTriangle, Activity, ChevronRight, RotateCw, ArrowLeftRight, MessageCircle, BarChart3, Bot, Zap, Wrench, LineChart, Search } from "lucide-react";
+
+const roleIcons: Record<string, React.ElementType> = {
+  Dispatcher: Zap,
+  Developer: Bot,
+  Operations: Wrench,
+  Analyst: LineChart,
+  Researcher: Search,
+};
 
 interface AgentOrbProps {
   agent: Agent;
@@ -13,6 +21,7 @@ interface AgentOrbProps {
 
 export function AgentOrb({ agent, index }: AgentOrbProps) {
   const [expanded, setExpanded] = useState(false);
+  const RoleIcon = roleIcons[agent.role] || Bot;
 
   return (
     <>
@@ -20,17 +29,33 @@ export function AgentOrb({ agent, index }: AgentOrbProps) {
         initial={{ opacity: 0, scale: 0.5 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5, delay: index * 0.1, type: "spring" }}
-        whileHover={{ scale: 1.08 }}
+        whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setExpanded(true)}
         className={cn("glass-panel-hover p-4 flex flex-col items-center gap-2 cursor-pointer relative group min-w-[120px]")}
       >
+        {/* Subtle online indicator - just a small dot, no pulsing border */}
         {agent.status === "online" && (
-          <div className="absolute inset-0 rounded-lg border border-primary/20 animate-pulse-ring pointer-events-none" />
+          <div className="absolute top-2.5 right-2.5 h-1.5 w-1.5 rounded-full bg-glow-success glow-dot-online" />
         )}
-        <div className="text-3xl mb-1" style={{ animation: agent.status === "online" ? "float 3s ease-in-out infinite" : undefined, animationDelay: `${index * 0.4}s` }}>
-          {agent.avatar}
+        
+        {/* Icon-based avatar instead of emoji */}
+        <div className={cn(
+          "w-12 h-12 rounded-xl flex items-center justify-center mb-1",
+          agent.status === "online" ? "bg-primary/15 border border-primary/30" :
+          agent.status === "idle" ? "bg-glow-warning/10 border border-glow-warning/20" :
+          agent.status === "error" ? "bg-glow-danger/10 border border-glow-danger/20" :
+          "bg-secondary/50 border border-border/30"
+        )}>
+          <RoleIcon className={cn(
+            "h-5 w-5",
+            agent.status === "online" ? "text-primary" :
+            agent.status === "idle" ? "text-glow-warning" :
+            agent.status === "error" ? "text-glow-danger" :
+            "text-muted-foreground"
+          )} />
         </div>
+
         <div className="flex items-center gap-1.5">
           <StatusDot status={agent.status} size="sm" />
           <span className="text-sm font-medium text-foreground">{agent.name}</span>
@@ -48,7 +73,13 @@ export function AgentOrb({ agent, index }: AgentOrbProps) {
       <ExpandableOverlay isOpen={expanded} onClose={() => setExpanded(false)} title={agent.name}>
         <div className="space-y-5">
           <div className="flex items-center gap-4">
-            <div className="text-5xl">{agent.avatar}</div>
+            <div className={cn(
+              "w-16 h-16 rounded-xl flex items-center justify-center",
+              agent.status === "online" ? "bg-primary/15 border border-primary/30" :
+              "bg-secondary/50 border border-border/30"
+            )}>
+              <RoleIcon className={cn("h-7 w-7", agent.status === "online" ? "text-primary" : "text-muted-foreground")} />
+            </div>
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-xl font-bold text-foreground">{agent.name}</h3>
