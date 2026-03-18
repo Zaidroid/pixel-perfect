@@ -11,6 +11,8 @@ import TasksPage from "./pages/TasksPage";
 import MonitoringPage from "./pages/MonitoringPage";
 import TerminalPage from "./pages/TerminalPage";
 import SettingsPage from "./pages/SettingsPage";
+import PersonalPage from "./pages/PersonalPage";
+import WorkPage from "./pages/WorkPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +32,8 @@ const App = () => (
             <Route path="/monitoring" element={<MonitoringPage />} />
             <Route path="/terminal" element={<TerminalPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/personal" element={<PersonalPage />} />
+            <Route path="/work" element={<WorkPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
