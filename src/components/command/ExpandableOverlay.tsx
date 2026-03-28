@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 interface ExpandableOverlayProps {
   isOpen: boolean;
   onClose: () => void;
-  children: ReactNode;
+  children?: ReactNode;
   title?: string;
   subtitle?: string;
   icon?: ReactNode;
@@ -28,14 +28,14 @@ const modalVariants = {
     scale: 1,
     y: 0,
     filter: "blur(0px)",
-    transition: { type: "spring", stiffness: 300, damping: 28, mass: 0.8 },
+    transition: { type: "spring" as const, stiffness: 300, damping: 28, mass: 0.8 },
   },
   exit: {
     opacity: 0,
     scale: 0.9,
     y: 20,
     filter: "blur(4px)",
-    transition: { duration: 0.2, ease: "easeIn" },
+    transition: { duration: 0.2, ease: "easeIn" as const },
   },
 };
 
@@ -44,7 +44,7 @@ const contentVariants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { delay: 0.1, duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] },
+    transition: { delay: 0.1, duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] as const },
   },
 };
 
