@@ -309,28 +309,6 @@ const AgentsPage = () => {
         </div>
       </div>
 
-      {/* Network Graph */}
-      <AnimatePresence>
-        {showNetwork && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ type: "spring", stiffness: 200, damping: 25 }}
-            className="overflow-hidden"
-          >
-            <div className="glass-panel p-5">
-              <div className="flex items-center gap-2 mb-4">
-                <Network className="h-4 w-4 text-primary" />
-                <h2 className="text-sm font-semibold text-foreground">Agent Interactions</h2>
-                <span className="text-[9px] mono text-muted-foreground/50 ml-auto">Real-time multi-agent communication</span>
-              </div>
-              <AgentNetworkGraph />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Agent Cards Grid */}
       <div className="flex gap-6">
         <div className={cn("flex-1 grid gap-4 transition-all", chatAgent ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3")}>
