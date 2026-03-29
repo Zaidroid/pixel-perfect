@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Outlet } from "react-router-dom";
 import { BottomDock } from "./BottomDock";
 import { CommandPalette } from "./CommandPalette";
-import { GlobalChat, ChatTrigger } from "./GlobalChat";
+import { GlobalChat } from "./GlobalChat";
 import { AnimatedBackground } from "./AnimatedBackground";
 
 export function CommandLayout() {
@@ -70,7 +70,11 @@ export function CommandLayout() {
         <Outlet />
       </main>
 
-      <BottomDock onOpenPalette={() => setPaletteOpen(true)} />
+      <BottomDock
+        onOpenPalette={() => setPaletteOpen(true)}
+        onToggleChat={toggleChat}
+        chatActive={chatVisible}
+      />
 
       <CommandPalette
         isOpen={paletteOpen}
@@ -78,7 +82,6 @@ export function CommandLayout() {
         onOpenChat={openChat}
       />
 
-      {!chatVisible && <ChatTrigger onClick={toggleChat} hasActive={false} />}
       <GlobalChat
         activeAgentId={chatVisible ? chatAgentId : null}
         onClose={closeChat}
