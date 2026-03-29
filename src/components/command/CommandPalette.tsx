@@ -39,10 +39,9 @@ export function CommandPalette({ isOpen, onClose, onOpenChat }: CommandPalettePr
     // Pages
     { id: "nav-dash", label: "Dashboard", description: "System overview", icon: LayoutDashboard, action: () => go("/"), category: "Navigate" },
     { id: "nav-agents", label: "Agents", description: "Agent fleet management", icon: Bot, action: () => go("/agents"), category: "Navigate" },
-    { id: "nav-services", label: "Services", description: "Running services", icon: Server, action: () => go("/services"), category: "Navigate" },
+    { id: "nav-infra", label: "Infrastructure", description: "Services, monitoring & terminal", icon: Server, action: () => go("/infrastructure"), category: "Navigate" },
     { id: "nav-tasks", label: "Tasks", description: "Kanban board", icon: ListTodo, action: () => go("/tasks"), category: "Navigate" },
-    { id: "nav-monitoring", label: "Monitoring", description: "System metrics", icon: Activity, action: () => go("/monitoring"), category: "Navigate" },
-    { id: "nav-terminal", label: "Terminal", description: "Command interface", icon: Terminal, action: () => go("/terminal"), category: "Navigate" },
+    { id: "nav-projects", label: "Projects", description: "Project management & approvals", icon: Briefcase, action: () => go("/projects"), category: "Navigate" },
     { id: "nav-personal", label: "Personal", description: "Personal workspace", icon: User, action: () => go("/personal"), category: "Navigate" },
     { id: "nav-work", label: "Work", description: "Work projects", icon: Briefcase, action: () => go("/work"), category: "Navigate" },
     { id: "nav-settings", label: "Settings", description: "Configuration", icon: Settings, action: () => go("/settings"), category: "Navigate" },

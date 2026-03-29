@@ -6,10 +6,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { CommandLayout } from "@/components/command/CommandLayout";
 import Dashboard from "./pages/Dashboard";
 import AgentsPage from "./pages/AgentsPage";
-import ServicesPage from "./pages/ServicesPage";
+import InfrastructurePage from "./pages/InfrastructurePage";
 import TasksPage from "./pages/TasksPage";
-import MonitoringPage from "./pages/MonitoringPage";
-import TerminalPage from "./pages/TerminalPage";
+import ProjectsPage from "./pages/ProjectsPage";
 import SettingsPage from "./pages/SettingsPage";
 import PersonalPage from "./pages/PersonalPage";
 import WorkPage from "./pages/WorkPage";
@@ -27,10 +26,9 @@ const App = () => (
           <Route element={<CommandLayout />}>
             <Route path="/" element={<Dashboard />} />
             <Route path="/agents" element={<AgentsPage />} />
-            <Route path="/services" element={<ServicesPage />} />
+            <Route path="/infrastructure" element={<InfrastructurePage />} />
             <Route path="/tasks" element={<TasksPage />} />
-            <Route path="/monitoring" element={<MonitoringPage />} />
-            <Route path="/terminal" element={<TerminalPage />} />
+            <Route path="/projects" element={<ProjectsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/personal" element={<PersonalPage />} />
             <Route path="/work" element={<WorkPage />} />
