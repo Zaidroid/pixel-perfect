@@ -234,48 +234,124 @@ const SettingsPage = () => {
           )}
 
           {activeSection === "appearance" && (
-            <div className="glass-panel p-5 space-y-4">
-              <h2 className="text-sm font-semibold text-foreground">Theme</h2>
-              <div className="flex gap-3">
-                {[
-                  { label: "Dark", icon: Moon, active: true },
-                  { label: "Light", icon: Sun, active: false },
-                  { label: "System", icon: Monitor, active: false },
-                ].map((theme) => (
-                  <button
-                    key={theme.label}
-                    className={cn(
-                      "flex-1 flex flex-col items-center gap-2 p-4 rounded-lg border transition-colors",
-                      theme.active
-                        ? "bg-primary/10 border-primary/30 text-primary"
-                        : "bg-secondary/20 border-border/30 text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    <theme.icon className="h-5 w-5" />
-                    <span className="text-xs mono">{theme.label}</span>
-                    {theme.active && <Check className="h-3 w-3" />}
-                  </button>
-                ))}
+            <div className="space-y-4">
+              <div className="glass-panel p-5 space-y-4">
+                <div className="flex items-baseline justify-between">
+                  <h2 className="text-sm font-semibold text-foreground">Theme</h2>
+                  <span className="text-[10px] mono text-muted-foreground">
+                    Active: <span className="text-primary">{resolved}</span>
+                  </span>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  {([
+                    { id: "dark", label: "Dark", icon: Moon },
+                    { id: "light", label: "Light", icon: Sun },
+                    { id: "system", label: "System", icon: Monitor },
+                  ] as { id: ThemeMode; label: string; icon: typeof Moon }[]).map((theme) => {
+                    const active = mode === theme.id;
+                    return (
+                      <button
+                        key={theme.id}
+                        onClick={() => setMode(theme.id)}
+                        className={cn(
+                          "relative flex flex-col items-center gap-2 p-4 rounded-lg border transition-all overflow-hidden group",
+                          active
+                            ? "bg-primary/10 border-primary/40 text-primary shadow-glow"
+                            : "bg-secondary/20 border-border/30 text-muted-foreground hover:text-foreground hover:border-border/60"
+                        )}
+                      >
+                        {/* Mini preview */}
+                        <div className={cn(
+                          "w-full h-12 rounded-md mb-1 flex items-center justify-center relative overflow-hidden",
+                          theme.id === "dark" && "bg-[hsl(222_25%_5%)]",
+                          theme.id === "light" && "bg-[hsl(210_30%_97%)]",
+                          theme.id === "system" && "bg-gradient-to-r from-[hsl(222_25%_5%)] to-[hsl(210_30%_97%)]",
+                        )}>
+                          <theme.icon className={cn(
+                            "h-4 w-4",
+                            theme.id === "dark" && "text-[hsl(185_85%_58%)]",
+                            theme.id === "light" && "text-[hsl(185_85%_42%)]",
+                            theme.id === "system" && "text-foreground",
+                          )} />
+                        </div>
+                        <span className="text-xs mono">{theme.label}</span>
+                        {active && (
+                          <motion.div
+                            layoutId="theme-active"
+                            className="absolute top-1.5 right-1.5"
+                          >
+                            <Check className="h-3 w-3" />
+                          </motion.div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-              <div className="mt-4">
-                <p className="text-[10px] mono text-muted-foreground uppercase tracking-wider mb-3">Accent Color</p>
-                <div className="flex gap-2">
-                  {[
-                    { color: "bg-[hsl(185,80%,55%)]", active: true },
-                    { color: "bg-[hsl(260,70%,60%)]", active: false },
-                    { color: "bg-[hsl(155,75%,50%)]", active: false },
-                    { color: "bg-[hsl(38,92%,55%)]", active: false },
-                    { color: "bg-[hsl(340,75%,55%)]", active: false },
-                  ].map((c, i) => (
-                    <button
-                      key={i}
-                      className={cn(
-                        "h-8 w-8 rounded-full transition-transform",
-                        c.color,
-                        c.active ? "ring-2 ring-primary ring-offset-2 ring-offset-background scale-110" : "hover:scale-105"
-                      )}
-                    />
-                  ))}
+
+              <div className="glass-panel p-5 space-y-4">
+                <div className="flex items-baseline justify-between">
+                  <h2 className="text-sm font-semibold text-foreground">Accent Color</h2>
+                  <span className="text-[10px] mono text-muted-foreground capitalize">
+                    {accent}
+                  </span>
+                </div>
+                <div className="flex gap-3 flex-wrap">
+                  {ACCENTS.map((c) => {
+                    const active = accent === c.id;
+                    return (
+                      <button
+                        key={c.id}
+                        onClick={() => setAccent(c.id)}
+                        className="flex flex-col items-center gap-1.5 group"
+                        title={c.label}
+                      >
+                        <div className="relative">
+                          <motion.div
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.95 }}
+                            className={cn(
+                              "h-10 w-10 rounded-full transition-all relative",
+                              active && "ring-2 ring-offset-2 ring-offset-background scale-110"
+                            )}
+                            style={{
+                              background: c.swatch,
+                              boxShadow: active
+                                ? `0 0 24px ${c.swatch}, 0 0 0 2px ${c.swatch}`
+                                : `0 0 12px ${c.swatch}66`,
+                            }}
+                          >
+                            {active && (
+                              <Check className="h-4 w-4 text-white absolute inset-0 m-auto drop-shadow-md" />
+                            )}
+                          </motion.div>
+                        </div>
+                        <span className={cn(
+                          "text-[9px] mono transition-colors",
+                          active ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"
+                        )}>
+                          {c.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Live preview */}
+                <div className="mt-2 p-4 rounded-lg bg-secondary/20 border border-border/30 space-y-3">
+                  <p className="text-[10px] mono text-muted-foreground uppercase tracking-wider">Preview</p>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <button className="px-3 py-1.5 text-xs rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-opacity">
+                      Primary Button
+                    </button>
+                    <button className="px-3 py-1.5 text-xs rounded-md bg-primary/15 border border-primary/30 text-primary">
+                      Subtle
+                    </button>
+                    <span className="text-xs text-primary glow-text font-semibold">Glow text</span>
+                    <div className="h-2 w-24 rounded-full bg-secondary overflow-hidden">
+                      <div className="h-full w-2/3 rounded-full" style={{ background: "var(--gradient-primary)" }} />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
