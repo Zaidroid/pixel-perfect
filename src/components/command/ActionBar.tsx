@@ -288,8 +288,9 @@ export function ActionBar({ onOpenPalette }: ActionBarProps) {
               {navItems.map((item, idx) => {
                 const isActive = item.path === "/" ? location.pathname === "/" : location.pathname.startsWith(item.path);
                 const dist = hoveredIdx !== null ? Math.abs(idx - hoveredIdx) : Infinity;
-                const scale = dist === 0 ? 1.3 : dist === 1 ? 1.12 : 1;
-                const yOff = dist === 0 ? -8 : dist === 1 ? -3 : 0;
+                const isHovered = dist === 0;
+                const scale = dist === 0 ? 1.35 : dist === 1 ? 1.14 : dist === 2 ? 1.04 : 1;
+                const yOff = dist === 0 ? -10 : dist === 1 ? -4 : dist === 2 ? -1 : 0;
 
                 return (
                   <Tooltip key={item.path}>
@@ -298,12 +299,33 @@ export function ActionBar({ onOpenPalette }: ActionBarProps) {
                         onClick={() => navigate(item.path)}
                         onMouseEnter={() => setHoveredIdx(idx)}
                         animate={{ scale, y: yOff }}
-                        transition={{ type: "spring", stiffness: 380, damping: 22 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 22 }}
                         className={cn(
                           "relative flex items-center justify-center w-9 h-9 rounded-2xl transition-colors",
                           isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
                         )}
                       >
+                        {/* Hover glow background that follows the magnified item */}
+                        <AnimatePresence>
+                          {isHovered && !isActive && (
+                            <motion.div
+                              key="hover-bg"
+                              initial={{ opacity: 0, scale: 0.6 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.6 }}
+                              transition={{ type: "spring", stiffness: 500, damping: 28 }}
+                              className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/15 border border-primary/30 shadow-[0_8px_24px_-4px_hsl(var(--primary)/0.4),inset_0_1px_0_0_hsl(0_0%_100%/0.1)]"
+                            />
+                          )}
+                        </AnimatePresence>
+                        {/* Reflective sheen on hover */}
+                        {isHovered && (
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="absolute inset-x-1 top-0.5 h-1/2 rounded-t-2xl bg-gradient-to-b from-foreground/15 to-transparent pointer-events-none"
+                          />
+                        )}
                         {isActive && (
                           <motion.div
                             layoutId="bar-active"
@@ -327,7 +349,8 @@ export function ActionBar({ onOpenPalette }: ActionBarProps) {
               })}
             </div>
 
-            <div className="w-px h-6 bg-border/40 mx-1" />
+            {/* Utility cluster — visually separated */}
+            <div className="ml-2 flex items-center gap-0.5 p-1 rounded-2xl bg-background/60 border border-border/50 shadow-[inset_0_1px_2px_0_hsl(0_0%_0%/0.2)]">
 
             {/* Search */}
             <Tooltip>
