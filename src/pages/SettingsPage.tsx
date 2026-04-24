@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Settings, Bell, Shield, Palette, Globe, Database, Save, RotateCw, ChevronRight, Check, Moon, Sun, Monitor } from "lucide-react";
+import { useTheme, ACCENTS, type ThemeMode } from "@/components/theme/ThemeProvider";
 
 interface SettingToggle {
   label: string;
