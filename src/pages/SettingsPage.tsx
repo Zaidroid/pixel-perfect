@@ -14,6 +14,7 @@ interface SettingToggle {
 const SettingsPage = () => {
   const [activeSection, setActiveSection] = useState("general");
   const [saved, setSaved] = useState(false);
+  const { mode, setMode, accent, setAccent, resolved } = useTheme();
 
   const [toggles, setToggles] = useState<SettingToggle[]>([
     { key: "auto_dispatch", label: "Auto-dispatch tasks", description: "Automatically assign incoming tasks to the best available agent", enabled: true },
