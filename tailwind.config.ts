@@ -26,6 +26,7 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          glow: "hsl(var(--primary-glow))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -42,6 +43,7 @@ export default {
         accent: {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
+          glow: "hsl(var(--accent-glow))",
         },
         popover: {
           DEFAULT: "hsl(var(--popover))",
@@ -56,6 +58,7 @@ export default {
           success: "hsl(var(--glow-success))",
           warning: "hsl(var(--glow-warning))",
           danger: "hsl(var(--glow-danger))",
+          accent: "hsl(var(--glow-accent))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
@@ -104,9 +107,16 @@ export default {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "pulse-ring": "pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
-        float: "float 3s ease-in-out infinite",
-        shimmer: "shimmer 2s linear infinite",
+        "pulse-ring": "pulse-ring 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+        float: "float 4s ease-in-out infinite",
+        shimmer: "shimmer 2.4s linear infinite",
+        aurora: "aurora 18s ease-in-out infinite",
+        "pulse-glow": "pulse-glow 2s ease-out infinite",
+      },
+      backgroundImage: {
+        "gradient-primary": "var(--gradient-primary)",
+        "gradient-aurora": "var(--gradient-aurora)",
+        "gradient-glass": "var(--gradient-glass)",
       },
     },
   },

@@ -17,34 +17,34 @@ interface ExpandableOverlayProps {
 }
 
 const backdropVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1 },
+  hidden: { opacity: 0, backdropFilter: "blur(0px)" },
+  visible: { opacity: 1, backdropFilter: "blur(20px)" },
 };
 
 const modalVariants = {
-  hidden: { opacity: 0, scale: 0.85, y: 40, filter: "blur(8px)" },
+  hidden: { opacity: 0, scale: 0.92, y: 24, filter: "blur(12px)" },
   visible: {
     opacity: 1,
     scale: 1,
     y: 0,
     filter: "blur(0px)",
-    transition: { type: "spring" as const, stiffness: 300, damping: 28, mass: 0.8 },
+    transition: { type: "spring" as const, stiffness: 320, damping: 30, mass: 0.7 },
   },
   exit: {
     opacity: 0,
-    scale: 0.9,
-    y: 20,
-    filter: "blur(4px)",
-    transition: { duration: 0.2, ease: "easeIn" as const },
+    scale: 0.95,
+    y: 12,
+    filter: "blur(6px)",
+    transition: { duration: 0.18, ease: [0.4, 0, 1, 1] as const },
   },
 };
 
 const contentVariants = {
-  hidden: { opacity: 0, y: 16 },
+  hidden: { opacity: 0, y: 14 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { delay: 0.1, duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] as const },
+    transition: { delay: 0.08, duration: 0.4, ease: [0.22, 1, 0.36, 1] as const },
   },
 };
 
@@ -97,8 +97,8 @@ export function ExpandableOverlay({
             initial="hidden"
             animate="visible"
             exit="hidden"
-            transition={{ duration: 0.25 }}
-            className="fixed inset-0 z-50 bg-background/80 backdrop-blur-xl"
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 z-50 bg-background/70"
             onClick={onClose}
           />
 
@@ -109,15 +109,26 @@ export function ExpandableOverlay({
               animate="visible"
               exit="exit"
               className={cn(
-                "pointer-events-auto overflow-hidden rounded-2xl border border-border/30 shadow-[0_0_100px_-30px_hsl(var(--glow-primary)/0.2),0_30px_60px_-15px_rgba(0,0,0,0.6)]",
-                "bg-gradient-to-b from-card/98 to-card/95 backdrop-blur-2xl",
+                "pointer-events-auto overflow-hidden rounded-2xl border border-border/40 relative",
+                "bg-gradient-to-b from-card/95 via-card/90 to-card/95 backdrop-blur-2xl",
+                "shadow-[0_30px_100px_-20px_hsl(var(--primary)/0.25),0_0_0_1px_hsl(var(--border)/0.5),0_30px_60px_-15px_rgba(0,0,0,0.7),inset_0_1px_0_0_hsl(0_0%_100%/0.06)]",
                 isMaximized
                   ? "w-full h-full max-w-none max-h-none rounded-none"
                   : cn("w-full max-h-[88vh]", sizeClasses[size])
               )}
             >
+              {/* Aurora glow inside modal */}
+              <div
+                className="absolute inset-0 pointer-events-none opacity-50"
+                style={{
+                  background:
+                    "radial-gradient(ellipse at top, hsl(var(--primary) / 0.12), transparent 50%), radial-gradient(ellipse at bottom right, hsl(var(--accent) / 0.08), transparent 50%)",
+                }}
+              />
+
               {/* Glow bar at top */}
-              <div className="h-[1px] bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+              <div className="h-[1px] bg-gradient-to-r from-transparent via-primary/60 to-transparent relative z-10" />
+
 
               {/* Header */}
               <div className="sticky top-0 z-10 flex items-center justify-between px-5 py-3.5 border-b border-border/20 bg-card/80 backdrop-blur-xl">
