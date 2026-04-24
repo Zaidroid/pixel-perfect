@@ -19,25 +19,27 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route element={<CommandLayout />}>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/agents" element={<AgentsPage />} />
-            <Route path="/infrastructure" element={<InfrastructurePage />} />
-            <Route path="/tasks" element={<TasksPage />} />
-            <Route path="/projects" element={<ProjectsPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="/personal" element={<PersonalPage />} />
-            <Route path="/work" element={<WorkPage />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <ThemeProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route element={<CommandLayout />}>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/agents" element={<AgentsPage />} />
+              <Route path="/infrastructure" element={<InfrastructurePage />} />
+              <Route path="/tasks" element={<TasksPage />} />
+              <Route path="/projects" element={<ProjectsPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/personal" element={<PersonalPage />} />
+              <Route path="/work" element={<WorkPage />} />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 
