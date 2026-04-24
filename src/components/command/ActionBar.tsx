@@ -395,7 +395,7 @@ export function ActionBar({ onOpenPalette }: ActionBarProps) {
                   whileTap={{ scale: 0.92 }}
                   onClick={() => setMode((m) => (m === "chat" ? "idle" : "chat"))}
                   className={cn(
-                    "relative flex items-center justify-center h-9 px-3 rounded-2xl ml-1 transition-all gap-1.5 overflow-hidden group",
+                    "relative flex items-center justify-center h-9 px-3 rounded-2xl transition-all gap-1.5 overflow-hidden group",
                     mode === "chat"
                       ? "text-primary-foreground"
                       : "text-foreground hover:text-primary-foreground"
@@ -425,6 +425,7 @@ export function ActionBar({ onOpenPalette }: ActionBarProps) {
               </TooltipTrigger>
               <TooltipContent side="top" className="text-[10px] mono">Talk to your agents</TooltipContent>
             </Tooltip>
+            </div>
           </div>
         </motion.div>
       </LayoutGroup>
