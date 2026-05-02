@@ -1,24 +1,23 @@
 import { useState, useRef, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
+import { motion, AnimatePresence, LayoutGroup, useMotionValue, useTransform, useSpring } from "framer-motion";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard, Bot, Server, ListTodo,
   Settings, User, Briefcase, Search, Sparkles,
   MessageCircle, FolderOpen, Bell, Send, ChevronDown, X,
 } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { agents } from "@/lib/mock-data";
 
 const navItems = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/" },
-  { icon: Bot, label: "Agents", path: "/agents" },
-  { icon: Server, label: "Infrastructure", path: "/infrastructure" },
-  { icon: ListTodo, label: "Tasks", path: "/tasks" },
-  { icon: FolderOpen, label: "Projects", path: "/projects" },
-  { icon: User, label: "Personal", path: "/personal" },
-  { icon: Briefcase, label: "Work", path: "/work" },
-  { icon: Settings, label: "Settings", path: "/settings" },
+  { icon: LayoutDashboard, label: "Dashboard", path: "/", hint: "Overview" },
+  { icon: Bot, label: "Agents", path: "/agents", hint: "Fleet" },
+  { icon: Server, label: "Infrastructure", path: "/infrastructure", hint: "Systems" },
+  { icon: ListTodo, label: "Tasks", path: "/tasks", hint: "Queue" },
+  { icon: FolderOpen, label: "Projects", path: "/projects", hint: "Workspaces" },
+  { icon: User, label: "Personal", path: "/personal", hint: "You" },
+  { icon: Briefcase, label: "Work", path: "/work", hint: "Org" },
+  { icon: Settings, label: "Settings", path: "/settings", hint: "Config" },
 ];
 
 const mockNotifications = [
@@ -33,6 +32,87 @@ interface ActionBarProps {
 
 type Mode = "idle" | "chat" | "notifications";
 
+/* ──────────────────────────────────────────────────────────
+   Liquid nav item — morphs to reveal label on hover
+   ────────────────────────────────────────────────────────── */
+function NavItem({
+  item,
+  isActive,
+  isHovered,
+  onHover,
+  onClick,
+}: {
+  item: typeof navItems[number];
+  isActive: boolean;
+  isHovered: boolean;
+  onHover: () => void;
+  onClick: () => void;
+}) {
+  const Icon = item.icon;
+  const expanded = isHovered || isActive;
+
+  return (
+    <motion.button
+      layout
+      onMouseEnter={onHover}
+      onClick={onClick}
+      whileTap={{ scale: 0.92 }}
+      transition={{ layout: { type: "spring", stiffness: 500, damping: 32 } }}
+      className={cn(
+        "relative flex items-center h-10 rounded-full overflow-hidden",
+        "transition-colors will-change-transform",
+        expanded ? "px-3 gap-2" : "px-0 w-10 justify-center",
+        isActive
+          ? "text-primary-foreground"
+          : isHovered
+          ? "text-foreground"
+          : "text-muted-foreground hover:text-foreground"
+      )}
+    >
+      {/* Active pill — gradient */}
+      {isActive && (
+        <motion.div
+          layoutId="nav-active-pill"
+          className="absolute inset-0 rounded-full"
+          style={{ background: "var(--gradient-primary)" }}
+          transition={{ type: "spring", stiffness: 400, damping: 32 }}
+        />
+      )}
+      {/* Hover pill — neutral wash, shows on the actual hovered item */}
+      {!isActive && isHovered && (
+        <motion.div
+          layoutId="nav-hover-pill"
+          className="absolute inset-0 rounded-full bg-secondary/70 ring-1 ring-border/60 shadow-[inset_0_1px_0_0_hsl(0_0%_100%/0.08)]"
+          transition={{ type: "spring", stiffness: 500, damping: 36 }}
+        />
+      )}
+      {isActive && (
+        <div className="absolute inset-0 rounded-full opacity-60 blur-md -z-10" style={{ background: "var(--gradient-primary)" }} />
+      )}
+
+      <Icon className={cn("relative z-10 shrink-0 transition-all", expanded ? "h-4 w-4" : "h-[18px] w-[18px]")} />
+
+      <AnimatePresence initial={false}>
+        {expanded && (
+          <motion.span
+            key="label"
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: "auto", opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 500, damping: 36 }}
+            className="relative z-10 overflow-hidden whitespace-nowrap text-[11px] font-medium mono tracking-tight"
+          >
+            {item.label}
+          </motion.span>
+        )}
+      </AnimatePresence>
+    </motion.button>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────
+   Main bar
+   ────────────────────────────────────────────────────────── */
 export function ActionBar({ onOpenPalette }: ActionBarProps) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -44,19 +124,29 @@ export function ActionBar({ onOpenPalette }: ActionBarProps) {
     { from: "agent", text: "Hi, what can I help you with?" },
   ]);
   const [agentPicker, setAgentPicker] = useState(false);
+  const [barHovered, setBarHovered] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const barRef = useRef<HTMLDivElement>(null);
 
-  // ESC closes expanded modes
+  // Spotlight follows mouse
+  const mx = useMotionValue(0);
+  const my = useMotionValue(0);
+  const smx = useSpring(mx, { stiffness: 200, damping: 30 });
+  const smy = useSpring(my, { stiffness: 200, damping: 30 });
+  const spotlight = useTransform(
+    [smx, smy],
+    ([x, y]) =>
+      `radial-gradient(180px circle at ${x}px ${y}px, hsl(var(--primary) / 0.18), transparent 65%)`
+  );
+
   useEffect(() => {
-    const h = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setMode("idle");
-    };
+    const h = (e: KeyboardEvent) => { if (e.key === "Escape") setMode("idle"); };
     window.addEventListener("keydown", h);
     return () => window.removeEventListener("keydown", h);
   }, []);
 
   useEffect(() => {
-    if (mode === "chat") setTimeout(() => inputRef.current?.focus(), 200);
+    if (mode === "chat") setTimeout(() => inputRef.current?.focus(), 250);
   }, [mode]);
 
   const sendMsg = () => {
@@ -69,6 +159,14 @@ export function ActionBar({ onOpenPalette }: ActionBarProps) {
     }, 700);
   };
 
+  const activeIdx = navItems.findIndex((n) =>
+    n.path === "/" ? location.pathname === "/" : location.pathname.startsWith(n.path)
+  );
+  const currentLabel =
+    hoveredIdx !== null ? navItems[hoveredIdx].hint
+    : activeIdx >= 0 ? navItems[activeIdx].hint
+    : "Mission Control";
+
   return (
     <motion.div
       initial={{ y: 100, opacity: 0 }}
@@ -76,26 +174,62 @@ export function ActionBar({ onOpenPalette }: ActionBarProps) {
       transition={{ type: "spring", stiffness: 220, damping: 24, delay: 0.2 }}
       className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 pointer-events-none"
     >
-      <LayoutGroup>
+      {/* Floating context label above bar */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentLabel}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.2 }}
+          className="text-center mb-2 pointer-events-none"
+        >
+          <span className="text-[9px] mono uppercase tracking-[0.25em] text-muted-foreground/60">
+            {currentLabel}
+          </span>
+        </motion.div>
+      </AnimatePresence>
+
+      <LayoutGroup id="actionbar">
         <motion.div
           layout
-          transition={{ type: "spring", stiffness: 260, damping: 28 }}
+          ref={barRef}
+          onMouseEnter={() => setBarHovered(true)}
+          onMouseLeave={() => { setBarHovered(false); setHoveredIdx(null); }}
+          onMouseMove={(e) => {
+            const r = barRef.current?.getBoundingClientRect();
+            if (!r) return;
+            mx.set(e.clientX - r.left);
+            my.set(e.clientY - r.top);
+          }}
+          transition={{ type: "spring", stiffness: 320, damping: 32 }}
           className={cn(
             "pointer-events-auto relative",
-            "rounded-[28px] overflow-hidden",
-            "bg-card/70 backdrop-blur-2xl",
+            "rounded-[26px]",
+            "bg-card/75 backdrop-blur-2xl",
             "border border-border/50",
-            "shadow-[0_20px_60px_-15px_hsl(var(--primary)/0.25),0_0_0_1px_hsl(var(--border)/0.3),inset_0_1px_0_0_hsl(0_0%_100%/0.06)]"
+            "shadow-[0_24px_70px_-20px_hsl(var(--primary)/0.35),0_0_0_1px_hsl(var(--border)/0.4),inset_0_1px_0_0_hsl(0_0%_100%/0.07)]"
           )}
+          style={{
+            // Bar physically grows when hovered to feel reactive
+            transform: barHovered ? "translateY(-2px)" : "translateY(0)",
+            transition: "transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
+          }}
         >
-          {/* Animated gradient outline */}
+          {/* Spotlight that follows cursor */}
+          <motion.div
+            className="absolute inset-0 rounded-[26px] pointer-events-none opacity-0 transition-opacity duration-300"
+            style={{ background: spotlight, opacity: barHovered ? 1 : 0 }}
+          />
+          {/* Shimmer outline */}
           <div
-            className="absolute inset-0 rounded-[28px] pointer-events-none opacity-60"
+            className="absolute inset-0 rounded-[26px] pointer-events-none opacity-50"
             style={{
               background:
-                "linear-gradient(120deg, transparent 30%, hsl(var(--primary) / 0.15) 50%, transparent 70%)",
+                "linear-gradient(120deg, transparent 30%, hsl(var(--primary) / 0.18) 50%, transparent 70%)",
               backgroundSize: "200% 100%",
-              animation: "shimmer 6s linear infinite",
+              animation: "shimmer 7s linear infinite",
+              maskImage: "linear-gradient(black, black)",
             }}
           />
 
@@ -108,16 +242,12 @@ export function ActionBar({ onOpenPalette }: ActionBarProps) {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
-                transition={{ type: "spring", stiffness: 260, damping: 30 }}
+                transition={{ type: "spring", stiffness: 280, damping: 32 }}
                 className="overflow-hidden"
               >
                 <div className="w-[420px] max-w-[92vw] p-3">
-                  {/* Agent header */}
                   <div className="flex items-center justify-between mb-2.5 px-1">
-                    <button
-                      onClick={() => setAgentPicker((p) => !p)}
-                      className="flex items-center gap-2 group"
-                    >
+                    <button onClick={() => setAgentPicker((p) => !p)} className="flex items-center gap-2 group">
                       <div className="relative">
                         <div className="h-7 w-7 rounded-full bg-gradient-primary flex items-center justify-center text-[10px] font-bold text-primary-foreground">
                           {chatAgent.name[0]}
@@ -135,15 +265,11 @@ export function ActionBar({ onOpenPalette }: ActionBarProps) {
                         <div className="text-[9px] mono text-muted-foreground">{chatAgent.role}</div>
                       </div>
                     </button>
-                    <button
-                      onClick={() => setMode("idle")}
-                      className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary/40 transition-colors"
-                    >
+                    <button onClick={() => setMode("idle")} className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary/40 transition-colors">
                       <X className="h-3.5 w-3.5" />
                     </button>
                   </div>
 
-                  {/* Agent picker */}
                   <AnimatePresence>
                     {agentPicker && (
                       <motion.div
@@ -173,15 +299,9 @@ export function ActionBar({ onOpenPalette }: ActionBarProps) {
                     )}
                   </AnimatePresence>
 
-                  {/* Messages */}
                   <div className="h-[200px] overflow-y-auto rounded-lg bg-secondary/20 border border-border/30 p-2.5 space-y-2 mb-2">
                     {chatMsgs.map((m, i) => (
-                      <motion.div
-                        key={i}
-                        initial={{ opacity: 0, y: 6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className={cn("flex", m.from === "me" ? "justify-end" : "justify-start")}
-                      >
+                      <motion.div key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className={cn("flex", m.from === "me" ? "justify-end" : "justify-start")}>
                         <div className={cn(
                           "max-w-[80%] px-2.5 py-1.5 rounded-xl text-[11px] leading-snug",
                           m.from === "me"
@@ -194,7 +314,6 @@ export function ActionBar({ onOpenPalette }: ActionBarProps) {
                     ))}
                   </div>
 
-                  {/* Input */}
                   <div className="flex items-center gap-1.5 rounded-lg bg-secondary/40 border border-border/40 px-2.5 py-1.5 focus-within:border-primary/50 transition-colors">
                     <Sparkles className="h-3.5 w-3.5 text-primary/70 shrink-0" />
                     <input
@@ -224,7 +343,7 @@ export function ActionBar({ onOpenPalette }: ActionBarProps) {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
-                transition={{ type: "spring", stiffness: 260, damping: 30 }}
+                transition={{ type: "spring", stiffness: 280, damping: 32 }}
                 className="overflow-hidden"
               >
                 <div className="w-[340px] max-w-[92vw] p-3">
@@ -258,183 +377,110 @@ export function ActionBar({ onOpenPalette }: ActionBarProps) {
             )}
           </AnimatePresence>
 
-          {/* Divider when expanded */}
           {mode !== "idle" && <div className="h-px bg-border/30 mx-3" />}
 
           {/* ===== MAIN BAR ===== */}
-          <div className="flex items-center gap-0.5 px-2 py-2 relative">
+          <motion.div layout className="flex items-center gap-1 px-2 py-1.5 relative">
             {/* Logo */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <motion.button
-                  whileHover={{ scale: 1.08, rotate: 12 }}
-                  whileTap={{ scale: 0.92 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 18 }}
-                  onClick={() => navigate("/")}
-                  className="flex items-center justify-center w-9 h-9 rounded-2xl mr-1 relative group"
-                >
-                  <div className="absolute inset-0 rounded-2xl bg-gradient-primary opacity-90" />
-                  <div className="absolute inset-0 rounded-2xl bg-gradient-primary blur-md opacity-50 group-hover:opacity-80 transition-opacity" />
-                  <Sparkles className="h-4 w-4 text-primary-foreground relative z-10" />
-                </motion.button>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="text-[10px] mono">OpenClaw</TooltipContent>
-            </Tooltip>
+            <motion.button
+              whileHover={{ scale: 1.1, rotate: 12 }}
+              whileTap={{ scale: 0.9 }}
+              transition={{ type: "spring", stiffness: 500, damping: 14 }}
+              onClick={() => navigate("/")}
+              className="flex items-center justify-center w-10 h-10 rounded-2xl mr-0.5 relative group shrink-0"
+            >
+              <div className="absolute inset-0 rounded-2xl bg-gradient-primary opacity-90" />
+              <div className="absolute inset-0 rounded-2xl bg-gradient-primary blur-md opacity-60 group-hover:opacity-90 transition-opacity" />
+              <Sparkles className="h-4 w-4 text-primary-foreground relative z-10" />
+            </motion.button>
+
+            <div className="w-px h-6 bg-border/40 mx-0.5" />
+
+            {/* Liquid nav — items expand inline on hover */}
+            <div onMouseLeave={() => setHoveredIdx(null)} className="flex items-center gap-0.5">
+              {navItems.map((item, idx) => (
+                <NavItem
+                  key={item.path}
+                  item={item}
+                  isActive={idx === activeIdx}
+                  isHovered={hoveredIdx === idx}
+                  onHover={() => setHoveredIdx(idx)}
+                  onClick={() => navigate(item.path)}
+                />
+              ))}
+            </div>
 
             <div className="w-px h-6 bg-border/40 mx-1" />
 
-            {/* Nav with magnification */}
-            <div onMouseLeave={() => setHoveredIdx(null)} className="flex items-center gap-0.5">
-              {navItems.map((item, idx) => {
-                const isActive = item.path === "/" ? location.pathname === "/" : location.pathname.startsWith(item.path);
-                const dist = hoveredIdx !== null ? Math.abs(idx - hoveredIdx) : Infinity;
-                const isHovered = dist === 0;
-                const scale = dist === 0 ? 1.35 : dist === 1 ? 1.14 : dist === 2 ? 1.04 : 1;
-                const yOff = dist === 0 ? -10 : dist === 1 ? -4 : dist === 2 ? -1 : 0;
-
-                return (
-                  <Tooltip key={item.path} delayDuration={150}>
-                    <TooltipTrigger asChild>
-                      <motion.button
-                        onClick={() => navigate(item.path)}
-                        onMouseEnter={() => setHoveredIdx(idx)}
-                        whileTap={{ scale: 0.85, y: 2 }}
-                        animate={{ scale, y: yOff }}
-                        transition={{ type: "spring", stiffness: 500, damping: 14, mass: 0.6 }}
-                        className={cn(
-                          "relative flex items-center justify-center w-9 h-9 rounded-2xl transition-colors will-change-transform",
-                          isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                        )}
-                      >
-                        {/* Hover glow background that follows the magnified item */}
-                        <AnimatePresence>
-                          {isHovered && !isActive && (
-                            <motion.div
-                              key="hover-bg"
-                              initial={{ opacity: 0, scale: 0.6 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              exit={{ opacity: 0, scale: 0.6 }}
-                              transition={{ type: "spring", stiffness: 500, damping: 28 }}
-                              className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/15 border border-primary/30 shadow-[0_8px_24px_-4px_hsl(var(--primary)/0.4),inset_0_1px_0_0_hsl(0_0%_100%/0.1)]"
-                            />
-                          )}
-                        </AnimatePresence>
-                        {/* Reflective sheen on hover */}
-                        {isHovered && (
-                          <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="absolute inset-x-1 top-0.5 h-1/2 rounded-t-2xl bg-gradient-to-b from-foreground/15 to-transparent pointer-events-none"
-                          />
-                        )}
-                        {isActive && (
-                          <motion.div
-                            layoutId="bar-active"
-                            className="absolute inset-0 rounded-2xl bg-primary/15 border border-primary/30 shadow-[inset_0_0_12px_-2px_hsl(var(--primary)/0.4)]"
-                            transition={{ type: "spring", duration: 0.5, bounce: 0.2 }}
-                          />
-                        )}
-                        <item.icon className="h-4 w-4 relative z-10" />
-                        {isActive && (
-                          <motion.div
-                            layoutId="bar-dot"
-                            className="absolute -bottom-1 w-1 h-1 rounded-full bg-primary shadow-[0_0_6px_hsl(var(--primary))]"
-                            transition={{ type: "spring", duration: 0.5, bounce: 0.2 }}
-                          />
-                        )}
-                      </motion.button>
-                    </TooltipTrigger>
-                    <TooltipContent side="top" className="text-[10px] mono">{item.label}</TooltipContent>
-                  </Tooltip>
-                );
-              })}
-            </div>
-
-            <div className="w-px h-6 bg-border/40 mx-1.5" />
-
-            {/* Utility cluster — recessed inset panel */}
+            {/* Utility cluster — recessed */}
             <div className="flex items-center gap-1 p-1 rounded-2xl bg-background/70 border border-border/60 shadow-[inset_0_1px_3px_0_hsl(0_0%_0%/0.25)]">
               {/* Search */}
-              <Tooltip delayDuration={150}>
-                <TooltipTrigger asChild>
-                  <motion.button
-                    whileHover={{ scale: 1.18, y: -3 }}
-                    whileTap={{ scale: 0.85, y: 1 }}
-                    transition={{ type: "spring", stiffness: 500, damping: 14, mass: 0.6 }}
-                    onClick={onOpenPalette}
-                    className="flex items-center justify-center w-9 h-9 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors will-change-transform"
-                  >
-                    <Search className="h-4 w-4" />
-                  </motion.button>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-[10px] mono">
-                  Search <kbd className="ml-1 text-[8px] px-1 py-0.5 rounded bg-secondary border border-border">⌘K</kbd>
-                </TooltipContent>
-              </Tooltip>
+              <motion.button
+                whileHover={{ scale: 1.15, y: -2 }}
+                whileTap={{ scale: 0.88 }}
+                transition={{ type: "spring", stiffness: 500, damping: 14 }}
+                onClick={onOpenPalette}
+                className="flex items-center justify-center w-9 h-9 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors"
+                title="Search (⌘K)"
+              >
+                <Search className="h-4 w-4" />
+              </motion.button>
 
               {/* Notifications */}
-              <Tooltip delayDuration={150}>
-                <TooltipTrigger asChild>
-                  <motion.button
-                    whileHover={{ scale: 1.18, y: -3 }}
-                    whileTap={{ scale: 0.85, y: 1 }}
-                    transition={{ type: "spring", stiffness: 500, damping: 14, mass: 0.6 }}
-                    onClick={() => setMode((m) => (m === "notifications" ? "idle" : "notifications"))}
-                    className={cn(
-                      "relative flex items-center justify-center w-9 h-9 rounded-xl transition-colors will-change-transform",
-                      mode === "notifications"
-                        ? "text-primary bg-primary/15 ring-1 ring-primary/40"
-                        : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
-                    )}
-                  >
-                    <Bell className="h-4 w-4" />
-                    <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-glow-warning glow-dot-warning" />
-                  </motion.button>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-[10px] mono">Notifications</TooltipContent>
-              </Tooltip>
+              <motion.button
+                whileHover={{ scale: 1.15, y: -2 }}
+                whileTap={{ scale: 0.88 }}
+                transition={{ type: "spring", stiffness: 500, damping: 14 }}
+                onClick={() => setMode((m) => (m === "notifications" ? "idle" : "notifications"))}
+                className={cn(
+                  "relative flex items-center justify-center w-9 h-9 rounded-xl transition-colors",
+                  mode === "notifications"
+                    ? "text-primary bg-primary/15 ring-1 ring-primary/40"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
+                )}
+                title="Notifications"
+              >
+                <Bell className="h-4 w-4" />
+                <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-glow-warning glow-dot-warning" />
+              </motion.button>
 
               {/* Chat — primary CTA */}
-              <Tooltip delayDuration={150}>
-                <TooltipTrigger asChild>
-                  <motion.button
-                    whileHover={{ scale: 1.08, y: -2 }}
-                    whileTap={{ scale: 0.92, y: 1 }}
-                    transition={{ type: "spring", stiffness: 500, damping: 14, mass: 0.6 }}
-                    onClick={() => setMode((m) => (m === "chat" ? "idle" : "chat"))}
-                    className={cn(
-                      "relative flex items-center justify-center h-9 px-3 rounded-xl gap-1.5 overflow-hidden group will-change-transform",
-                      mode === "chat" ? "text-primary-foreground" : "text-foreground hover:text-primary-foreground"
-                    )}
-                  >
-                    <div
-                      className={cn(
-                        "absolute inset-0 transition-opacity duration-200",
-                        mode === "chat" ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                      )}
-                      style={{ background: "var(--gradient-primary)" }}
-                    />
-                    <div
-                      className={cn(
-                        "absolute inset-0 transition-opacity duration-200 bg-secondary/40",
-                        mode === "chat" ? "opacity-0" : "opacity-100 group-hover:opacity-0"
-                      )}
-                    />
-                    <MessageCircle className="h-4 w-4 relative z-10" />
-                    <span className="text-[11px] mono font-medium relative z-10">Chat</span>
-                    {mode !== "chat" && (
-                      <motion.span
-                        className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-primary z-10"
-                        animate={{ scale: [1, 1.4, 1], opacity: [0.6, 1, 0.6] }}
-                        transition={{ repeat: Infinity, duration: 2 }}
-                      />
-                    )}
-                  </motion.button>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-[10px] mono">Talk to your agents</TooltipContent>
-              </Tooltip>
+              <motion.button
+                whileHover={{ scale: 1.06, y: -2 }}
+                whileTap={{ scale: 0.94 }}
+                transition={{ type: "spring", stiffness: 500, damping: 14 }}
+                onClick={() => setMode((m) => (m === "chat" ? "idle" : "chat"))}
+                className={cn(
+                  "relative flex items-center justify-center h-9 px-3 rounded-xl gap-1.5 overflow-hidden group",
+                  mode === "chat" ? "text-primary-foreground" : "text-foreground hover:text-primary-foreground"
+                )}
+                title="Talk to your agents"
+              >
+                <div
+                  className={cn(
+                    "absolute inset-0 transition-opacity duration-200",
+                    mode === "chat" ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                  )}
+                  style={{ background: "var(--gradient-primary)" }}
+                />
+                <div
+                  className={cn(
+                    "absolute inset-0 transition-opacity duration-200 bg-secondary/40",
+                    mode === "chat" ? "opacity-0" : "opacity-100 group-hover:opacity-0"
+                  )}
+                />
+                <MessageCircle className="h-4 w-4 relative z-10" />
+                <span className="text-[11px] mono font-medium relative z-10">Chat</span>
+                {mode !== "chat" && (
+                  <motion.span
+                    className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-primary z-10"
+                    animate={{ scale: [1, 1.4, 1], opacity: [0.6, 1, 0.6] }}
+                    transition={{ repeat: Infinity, duration: 2 }}
+                  />
+                )}
+              </motion.button>
             </div>
-          </div>
+          </motion.div>
         </motion.div>
       </LayoutGroup>
     </motion.div>
