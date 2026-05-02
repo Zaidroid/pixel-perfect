@@ -294,28 +294,37 @@ export function AgentNetworkGraph() {
           </p>
         </div>
 
-        {/* Type filters */}
-        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-secondary/30 border border-border/40">
-          <Filter className="h-3 w-3 text-muted-foreground ml-1.5" />
+        {/* Type filters — clearer on/off state */}
+        <div className="flex items-center gap-1 p-1 rounded-xl bg-secondary/30 border border-border/40">
+          <Filter className="h-3 w-3 text-muted-foreground ml-1.5 mr-0.5" />
           {(Object.entries(typeConfig) as [InteractionType, typeof typeConfig.task][]).map(([type, cfg]) => {
             const Icon = cfg.icon;
             const active = activeTypes.has(type);
             return (
-              <button
+              <motion.button
                 key={type}
                 onClick={() => toggleType(type)}
+                whileTap={{ scale: 0.94 }}
                 className={cn(
-                  "flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] mono uppercase tracking-wider transition-all",
+                  "relative flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] mono uppercase tracking-wider transition-all",
                   active
-                    ? "bg-card text-foreground shadow-[0_0_0_1px_hsl(var(--border))]"
-                    : "text-muted-foreground/60 hover:text-foreground"
+                    ? "bg-card text-foreground"
+                    : "text-muted-foreground/50 hover:text-muted-foreground bg-transparent"
                 )}
-                style={active ? { boxShadow: `0 0 0 1px hsl(${cfg.color} / 0.4), 0 4px 12px -4px hsl(${cfg.color} / 0.4)` } : undefined}
+                style={active ? { boxShadow: `0 0 0 1px hsl(${cfg.color} / 0.5), 0 4px 12px -4px hsl(${cfg.color} / 0.45)` } : undefined}
               >
-                <Icon className="h-3 w-3" style={{ color: `hsl(${cfg.color})` }} />
+                <span
+                  className="h-1.5 w-1.5 rounded-full transition-opacity"
+                  style={{
+                    background: `hsl(${cfg.color})`,
+                    boxShadow: active ? `0 0 6px hsl(${cfg.color})` : "none",
+                    opacity: active ? 1 : 0.35,
+                  }}
+                />
+                <Icon className="h-3 w-3" style={{ color: active ? `hsl(${cfg.color})` : undefined, opacity: active ? 1 : 0.6 }} />
                 <span style={active ? { color: `hsl(${cfg.color})` } : undefined}>{cfg.label}</span>
-                <span className="ml-0.5 text-foreground/50">{stats[type]}</span>
-              </button>
+                <span className={cn("ml-0.5 tabular-nums", active ? "text-foreground/60" : "text-foreground/30")}>{stats[type]}</span>
+              </motion.button>
             );
           })}
         </div>
