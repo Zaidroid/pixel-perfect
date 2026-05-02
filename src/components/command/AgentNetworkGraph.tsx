@@ -390,23 +390,28 @@ export function AgentNetworkGraph() {
               if (!from || !to) return null;
               const cfg = typeConfig[edge.type];
               const ageOpacity = Math.max(0.2, 1 - edge.ageMs / 30000);
-              const strokeWidth = edge.ageMs < 1000 ? 2 : 1;
-
-              // Curve via hub
-              const pathD = `M ${from.x} ${from.y} Q ${cx} ${cy} ${to.x} ${to.y}`;
               const isFresh = edge.ageMs < 2000;
+              const involvesFocus = focusFilter && (edge.from === focusFilter || edge.to === focusFilter);
+              const strokeWidth = isFresh ? 2.4 : involvesFocus ? 1.6 : 1;
+              const fromAgent = agents.find(a => a.id === edge.from);
+              const toAgent = agents.find(a => a.id === edge.to);
+
+              const pathD = `M ${from.x} ${from.y} Q ${cx} ${cy} ${to.x} ${to.y}`;
 
               return (
-                <g key={edge.id}>
+                <g key={edge.id} style={{ cursor: "help" }}>
+                  {/* Wide invisible hit-target for hover tooltip */}
+                  <path d={pathD} fill="none" stroke="transparent" strokeWidth="14" />
                   <path
                     d={pathD}
                     fill="none"
                     stroke={`hsl(${cfg.color})`}
                     strokeWidth={strokeWidth}
-                    strokeOpacity={ageOpacity * 0.6}
-                    filter={isFresh ? "url(#edge-glow)" : undefined}
+                    strokeOpacity={ageOpacity * (involvesFocus ? 0.95 : 0.55)}
+                    filter={isFresh || involvesFocus ? "url(#edge-glow)" : undefined}
+                    style={{ transition: "all 0.3s" }}
                   />
-                  {/* Particle traveling along the path for fresh edges */}
+                  <title>{`${cfg.label}  ·  ${fromAgent?.name} → ${toAgent?.name}\n${edge.label} · ${edge.timestamp}`}</title>
                   {isFresh && (
                     <>
                       <circle r="3" fill={`hsl(${cfg.color})`}>
