@@ -294,28 +294,37 @@ export function AgentNetworkGraph() {
           </p>
         </div>
 
-        {/* Type filters */}
-        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-secondary/30 border border-border/40">
-          <Filter className="h-3 w-3 text-muted-foreground ml-1.5" />
+        {/* Type filters — clearer on/off state */}
+        <div className="flex items-center gap-1 p-1 rounded-xl bg-secondary/30 border border-border/40">
+          <Filter className="h-3 w-3 text-muted-foreground ml-1.5 mr-0.5" />
           {(Object.entries(typeConfig) as [InteractionType, typeof typeConfig.task][]).map(([type, cfg]) => {
             const Icon = cfg.icon;
             const active = activeTypes.has(type);
             return (
-              <button
+              <motion.button
                 key={type}
                 onClick={() => toggleType(type)}
+                whileTap={{ scale: 0.94 }}
                 className={cn(
-                  "flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] mono uppercase tracking-wider transition-all",
+                  "relative flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] mono uppercase tracking-wider transition-all",
                   active
-                    ? "bg-card text-foreground shadow-[0_0_0_1px_hsl(var(--border))]"
-                    : "text-muted-foreground/60 hover:text-foreground"
+                    ? "bg-card text-foreground"
+                    : "text-muted-foreground/50 hover:text-muted-foreground bg-transparent"
                 )}
-                style={active ? { boxShadow: `0 0 0 1px hsl(${cfg.color} / 0.4), 0 4px 12px -4px hsl(${cfg.color} / 0.4)` } : undefined}
+                style={active ? { boxShadow: `0 0 0 1px hsl(${cfg.color} / 0.5), 0 4px 12px -4px hsl(${cfg.color} / 0.45)` } : undefined}
               >
-                <Icon className="h-3 w-3" style={{ color: `hsl(${cfg.color})` }} />
+                <span
+                  className="h-1.5 w-1.5 rounded-full transition-opacity"
+                  style={{
+                    background: `hsl(${cfg.color})`,
+                    boxShadow: active ? `0 0 6px hsl(${cfg.color})` : "none",
+                    opacity: active ? 1 : 0.35,
+                  }}
+                />
+                <Icon className="h-3 w-3" style={{ color: active ? `hsl(${cfg.color})` : undefined, opacity: active ? 1 : 0.6 }} />
                 <span style={active ? { color: `hsl(${cfg.color})` } : undefined}>{cfg.label}</span>
-                <span className="ml-0.5 text-foreground/50">{stats[type]}</span>
-              </button>
+                <span className={cn("ml-0.5 tabular-nums", active ? "text-foreground/60" : "text-foreground/30")}>{stats[type]}</span>
+              </motion.button>
             );
           })}
         </div>
@@ -381,23 +390,28 @@ export function AgentNetworkGraph() {
               if (!from || !to) return null;
               const cfg = typeConfig[edge.type];
               const ageOpacity = Math.max(0.2, 1 - edge.ageMs / 30000);
-              const strokeWidth = edge.ageMs < 1000 ? 2 : 1;
-
-              // Curve via hub
-              const pathD = `M ${from.x} ${from.y} Q ${cx} ${cy} ${to.x} ${to.y}`;
               const isFresh = edge.ageMs < 2000;
+              const involvesFocus = focusFilter && (edge.from === focusFilter || edge.to === focusFilter);
+              const strokeWidth = isFresh ? 2.4 : involvesFocus ? 1.6 : 1;
+              const fromAgent = agents.find(a => a.id === edge.from);
+              const toAgent = agents.find(a => a.id === edge.to);
+
+              const pathD = `M ${from.x} ${from.y} Q ${cx} ${cy} ${to.x} ${to.y}`;
 
               return (
-                <g key={edge.id}>
+                <g key={edge.id} style={{ cursor: "help" }}>
+                  {/* Wide invisible hit-target for hover tooltip */}
+                  <path d={pathD} fill="none" stroke="transparent" strokeWidth="14" />
                   <path
                     d={pathD}
                     fill="none"
                     stroke={`hsl(${cfg.color})`}
                     strokeWidth={strokeWidth}
-                    strokeOpacity={ageOpacity * 0.6}
-                    filter={isFresh ? "url(#edge-glow)" : undefined}
+                    strokeOpacity={ageOpacity * (involvesFocus ? 0.95 : 0.55)}
+                    filter={isFresh || involvesFocus ? "url(#edge-glow)" : undefined}
+                    style={{ transition: "all 0.3s" }}
                   />
-                  {/* Particle traveling along the path for fresh edges */}
+                  <title>{`${cfg.label}  ·  ${fromAgent?.name} → ${toAgent?.name}\n${edge.label} · ${edge.timestamp}`}</title>
                   {isFresh && (
                     <>
                       <circle r="3" fill={`hsl(${cfg.color})`}>
@@ -440,19 +454,26 @@ export function AgentNetworkGraph() {
           </svg>
 
           {/* Focus indicator */}
-          {focusedAgent && (
-            <button
-              onClick={() => setFocusedAgent(null)}
-              className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-primary/15 border border-primary/30 text-[10px] mono text-primary hover:bg-primary/25 transition-colors"
-            >
-              Focus: {agents.find(a => a.id === focusedAgent)?.name}
-              <span className="text-primary/60">×</span>
-            </button>
-          )}
+          <AnimatePresence>
+            {focusedAgent && (
+              <motion.button
+                initial={{ opacity: 0, y: -6, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -6, scale: 0.9 }}
+                transition={{ type: "spring", stiffness: 400, damping: 24 }}
+                onClick={() => setFocusedAgent(null)}
+                className="absolute top-3 left-3 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/15 border border-primary/40 text-[10px] mono text-primary hover:bg-primary/25 transition-colors backdrop-blur-sm shadow-[0_4px_16px_-4px_hsl(var(--primary)/0.4)]"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                <span>Focused: <span className="font-semibold">{agents.find(a => a.id === focusedAgent)?.name}</span></span>
+                <span className="text-primary/50 hover:text-primary">×</span>
+              </motion.button>
+            )}
+          </AnimatePresence>
 
           {/* Bottom legend hint */}
-          <div className="absolute bottom-3 right-3 flex items-center gap-1.5 text-[9px] mono text-muted-foreground/70">
-            <span>click orb to focus · hover to highlight</span>
+          <div className="absolute bottom-3 right-3 flex items-center gap-1.5 text-[9px] mono text-muted-foreground/70 px-2 py-1 rounded-md bg-background/40 backdrop-blur-sm border border-border/30">
+            <span>click orb to focus · hover signal for details</span>
           </div>
         </div>
 
