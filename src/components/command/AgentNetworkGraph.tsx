@@ -454,19 +454,26 @@ export function AgentNetworkGraph() {
           </svg>
 
           {/* Focus indicator */}
-          {focusedAgent && (
-            <button
-              onClick={() => setFocusedAgent(null)}
-              className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-primary/15 border border-primary/30 text-[10px] mono text-primary hover:bg-primary/25 transition-colors"
-            >
-              Focus: {agents.find(a => a.id === focusedAgent)?.name}
-              <span className="text-primary/60">×</span>
-            </button>
-          )}
+          <AnimatePresence>
+            {focusedAgent && (
+              <motion.button
+                initial={{ opacity: 0, y: -6, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -6, scale: 0.9 }}
+                transition={{ type: "spring", stiffness: 400, damping: 24 }}
+                onClick={() => setFocusedAgent(null)}
+                className="absolute top-3 left-3 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/15 border border-primary/40 text-[10px] mono text-primary hover:bg-primary/25 transition-colors backdrop-blur-sm shadow-[0_4px_16px_-4px_hsl(var(--primary)/0.4)]"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                <span>Focused: <span className="font-semibold">{agents.find(a => a.id === focusedAgent)?.name}</span></span>
+                <span className="text-primary/50 hover:text-primary">×</span>
+              </motion.button>
+            )}
+          </AnimatePresence>
 
           {/* Bottom legend hint */}
-          <div className="absolute bottom-3 right-3 flex items-center gap-1.5 text-[9px] mono text-muted-foreground/70">
-            <span>click orb to focus · hover to highlight</span>
+          <div className="absolute bottom-3 right-3 flex items-center gap-1.5 text-[9px] mono text-muted-foreground/70 px-2 py-1 rounded-md bg-background/40 backdrop-blur-sm border border-border/30">
+            <span>click orb to focus · hover signal for details</span>
           </div>
         </div>
 
