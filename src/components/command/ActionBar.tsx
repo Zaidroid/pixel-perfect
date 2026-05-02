@@ -293,15 +293,16 @@ export function ActionBar({ onOpenPalette }: ActionBarProps) {
                 const yOff = dist === 0 ? -10 : dist === 1 ? -4 : dist === 2 ? -1 : 0;
 
                 return (
-                  <Tooltip key={item.path}>
+                  <Tooltip key={item.path} delayDuration={150}>
                     <TooltipTrigger asChild>
                       <motion.button
                         onClick={() => navigate(item.path)}
                         onMouseEnter={() => setHoveredIdx(idx)}
+                        whileTap={{ scale: 0.85, y: 2 }}
                         animate={{ scale, y: yOff }}
-                        transition={{ type: "spring", stiffness: 400, damping: 22 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 14, mass: 0.6 }}
                         className={cn(
-                          "relative flex items-center justify-center w-9 h-9 rounded-2xl transition-colors",
+                          "relative flex items-center justify-center w-9 h-9 rounded-2xl transition-colors will-change-transform",
                           isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
                         )}
                       >
@@ -349,82 +350,89 @@ export function ActionBar({ onOpenPalette }: ActionBarProps) {
               })}
             </div>
 
-            {/* Utility cluster — visually separated */}
-            <div className="ml-2 flex items-center gap-0.5 p-1 rounded-2xl bg-background/60 border border-border/50 shadow-[inset_0_1px_2px_0_hsl(0_0%_0%/0.2)]">
+            <div className="w-px h-6 bg-border/40 mx-1.5" />
 
-            {/* Search */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <motion.button
-                  whileTap={{ scale: 0.92 }}
-                  onClick={onOpenPalette}
-                  className="flex items-center justify-center w-9 h-9 rounded-2xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all"
-                >
-                  <Search className="h-4 w-4" />
-                </motion.button>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="text-[10px] mono">
-                Search <kbd className="ml-1 text-[8px] px-1 py-0.5 rounded bg-secondary border border-border">⌘K</kbd>
-              </TooltipContent>
-            </Tooltip>
+            {/* Utility cluster — recessed inset panel */}
+            <div className="flex items-center gap-1 p-1 rounded-2xl bg-background/70 border border-border/60 shadow-[inset_0_1px_3px_0_hsl(0_0%_0%/0.25)]">
+              {/* Search */}
+              <Tooltip delayDuration={150}>
+                <TooltipTrigger asChild>
+                  <motion.button
+                    whileHover={{ scale: 1.18, y: -3 }}
+                    whileTap={{ scale: 0.85, y: 1 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 14, mass: 0.6 }}
+                    onClick={onOpenPalette}
+                    className="flex items-center justify-center w-9 h-9 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors will-change-transform"
+                  >
+                    <Search className="h-4 w-4" />
+                  </motion.button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-[10px] mono">
+                  Search <kbd className="ml-1 text-[8px] px-1 py-0.5 rounded bg-secondary border border-border">⌘K</kbd>
+                </TooltipContent>
+              </Tooltip>
 
-            {/* Notifications */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <motion.button
-                  whileTap={{ scale: 0.92 }}
-                  onClick={() => setMode((m) => (m === "notifications" ? "idle" : "notifications"))}
-                  className={cn(
-                    "relative flex items-center justify-center w-9 h-9 rounded-2xl transition-all",
-                    mode === "notifications"
-                      ? "text-primary bg-primary/15 border border-primary/30"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-                  )}
-                >
-                  <Bell className="h-4 w-4" />
-                  <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-glow-warning glow-dot-warning" />
-                </motion.button>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="text-[10px] mono">Notifications</TooltipContent>
-            </Tooltip>
+              {/* Notifications */}
+              <Tooltip delayDuration={150}>
+                <TooltipTrigger asChild>
+                  <motion.button
+                    whileHover={{ scale: 1.18, y: -3 }}
+                    whileTap={{ scale: 0.85, y: 1 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 14, mass: 0.6 }}
+                    onClick={() => setMode((m) => (m === "notifications" ? "idle" : "notifications"))}
+                    className={cn(
+                      "relative flex items-center justify-center w-9 h-9 rounded-xl transition-colors will-change-transform",
+                      mode === "notifications"
+                        ? "text-primary bg-primary/15 ring-1 ring-primary/40"
+                        : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
+                    )}
+                  >
+                    <Bell className="h-4 w-4" />
+                    <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-glow-warning glow-dot-warning" />
+                  </motion.button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-[10px] mono">Notifications</TooltipContent>
+              </Tooltip>
 
-            {/* Chat — primary CTA */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <motion.button
-                  whileTap={{ scale: 0.92 }}
-                  onClick={() => setMode((m) => (m === "chat" ? "idle" : "chat"))}
-                  className={cn(
-                    "relative flex items-center justify-center h-9 px-3 rounded-2xl transition-all gap-1.5 overflow-hidden group",
-                    mode === "chat"
-                      ? "text-primary-foreground"
-                      : "text-foreground hover:text-primary-foreground"
-                  )}
-                >
-                  <div className={cn(
-                    "absolute inset-0 transition-opacity",
-                    mode === "chat" ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                  )}
-                    style={{ background: "var(--gradient-primary)" }}
-                  />
-                  <div className={cn(
-                    "absolute inset-0 transition-opacity",
-                    mode === "chat" ? "opacity-0" : "opacity-100 group-hover:opacity-0",
-                    "bg-secondary/40"
-                  )} />
-                  <MessageCircle className="h-4 w-4 relative z-10" />
-                  <span className="text-[11px] mono font-medium relative z-10">Chat</span>
-                  {mode !== "chat" && (
-                    <motion.div
-                      className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-primary z-10"
-                      animate={{ scale: [1, 1.4, 1], opacity: [0.6, 1, 0.6] }}
-                      transition={{ repeat: Infinity, duration: 2 }}
+              {/* Chat — primary CTA */}
+              <Tooltip delayDuration={150}>
+                <TooltipTrigger asChild>
+                  <motion.button
+                    whileHover={{ scale: 1.08, y: -2 }}
+                    whileTap={{ scale: 0.92, y: 1 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 14, mass: 0.6 }}
+                    onClick={() => setMode((m) => (m === "chat" ? "idle" : "chat"))}
+                    className={cn(
+                      "relative flex items-center justify-center h-9 px-3 rounded-xl gap-1.5 overflow-hidden group will-change-transform",
+                      mode === "chat" ? "text-primary-foreground" : "text-foreground hover:text-primary-foreground"
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        "absolute inset-0 transition-opacity duration-200",
+                        mode === "chat" ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                      )}
+                      style={{ background: "var(--gradient-primary)" }}
                     />
-                  )}
-                </motion.button>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="text-[10px] mono">Talk to your agents</TooltipContent>
-            </Tooltip>
+                    <div
+                      className={cn(
+                        "absolute inset-0 transition-opacity duration-200 bg-secondary/40",
+                        mode === "chat" ? "opacity-0" : "opacity-100 group-hover:opacity-0"
+                      )}
+                    />
+                    <MessageCircle className="h-4 w-4 relative z-10" />
+                    <span className="text-[11px] mono font-medium relative z-10">Chat</span>
+                    {mode !== "chat" && (
+                      <motion.span
+                        className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-primary z-10"
+                        animate={{ scale: [1, 1.4, 1], opacity: [0.6, 1, 0.6] }}
+                        transition={{ repeat: Infinity, duration: 2 }}
+                      />
+                    )}
+                  </motion.button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-[10px] mono">Talk to your agents</TooltipContent>
+              </Tooltip>
             </div>
           </div>
         </motion.div>
